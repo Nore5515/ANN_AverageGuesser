@@ -1,5 +1,6 @@
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
+
+import static java.util.Collection.*;
 
 /**
  * Created by s582060 on 3/8/17.
@@ -16,96 +17,72 @@ public class Main {
         int maxGen = s.nextInt();
         //int maxChild = s.nextInt();
         boolean initBatch = true;
-        ANN[] genGroup;
-        ANN[] genePool = new ANN[10];
+        List<ANN> genGroup = new ArrayList<ANN>();
+        ANN[] genePool = new ANN[1];
 
         for (int gen = 0; gen < maxGen; gen++){
 
-            genGroup = new ANN[100];
+            genGroup.clear();
 
             if (initBatch){
+                System.out.println("INITIAL BATCH");
                 for (int x = 0; x < 100; x++){
-                    genGroup[x] = new ANN(1,10);
+                    genGroup.add(new ANN(1,10));
                 }
                 initBatch = false;
             }
             else{
-                for (int x = 0; x < 10; x++){
-                    for (int y = 0; y < 10; y++) {
-                        //System.out.println("GENNIN " + ((x*10)+y));
-                        genGroup[x*10+y] = new ANN(1, 10,genePool[x].gene1,genePool[x].gene2);
+                if (genePool.length <= 10){
+                    //System.out.println("HORRIBLE ERROR!");
+                }
+                for (int x = 0; x < 50; x++){
+                    if (genePool[x] == null){
+                        //System.out.println("THE WINNER " + x + ": null placed in " + x);
                     }
+                    else{
+                        //System.out.println("THE WINNER " + x + ": " + genePool[x].ToString() + " placed in " + x);
+                    }
+
+                    genGroup.add(genePool[x]);
+                }
+                for (int x = 50; x < 100; x++){
+                    //System.out.println("placing new ANN in slot " + x);
+                    genGroup.add(new ANN(1,10));
                 }
             }
 
-            genePool = new ANN[10];
+            Collections.sort(genGroup);
+            //System.out.println("ANN 0: "+ genGroup.get(0).ToString()+"\nANN 99"+genGroup.get(99).ToString());
+            genePool = new ANN[50];
+            for (int x = 0; x < 50; x++){
+                genePool[x] = genGroup.get(x+50);
+            }
 
+
+            //System.out.println(genGroup[99].ToString());
             for (int child = 0; child < 100; child++){
-                System.out.println(genGroup[child].ToString())
-                genePool = m.ANNAddIfHigher(genePool, genGroup[child]);
-                System.out.println(genGroup[child].ToString());
-            }
-            System.out.println("\n\nGEN " + gen + "\n");
-            for (int x = 0; x < 10; x++){
-                System.out.println(genePool[x].ToString());
-            }
-            System.out.println("\n\n");
-        }
-
-
-    }
-
-    public ANN[] ANNAddIfHigher(ANN[] anns, ANN annInQuestion){
-        ANN[] returnList = new ANN[10];
-        boolean added = false;
-        //System.out.println("\n\n");
-        for (int x = 0; x < 10; x++){
-
-            //DEBUG
-            /*
-            if (anns[x] != null){
-                System.out.print("\tORIGINAL" + anns[x].ToString() + " | ");
-            }
-            else{
-                System.out.print("\tORIGINAL null" + " | ");
-            }
-            */
-            //DEBUG
-
-            if (!added){
-                if (anns[x] == null){
-                    //System.out.print("ADDITION");
-                    returnList[x] = annInQuestion;
-                    added = true;
-                }
-                else if (anns[x].output > annInQuestion.output && annInQuestion.output > 5.5f || anns[x].output < annInQuestion.output && annInQuestion.output < 5.5f){
-                    //System.out.print("REPLACEMENT");
-                    returnList[x] = annInQuestion;
-                    added = true;
+                if (genGroup.get(child) == null){
+                    //System.out.println("genGroup[" + child + "] does not exist!");
                 }
                 else{
-                    returnList[x] = anns[x];
-                }
-            }
-            else{
-                returnList[x] = anns[x];
-            }
+                    //System.out.println("ANN_" +child+": "+ genGroup.get(child).ToString());
 
-            //DEBUG
-            /*
-            if (returnList[x] != null){
-                System.out.print(" | NEW\t" + returnList[x].ToString());
+                    //System.out.println(genGroup[child].ToString());
+                }
+
             }
-            else{
-                System.out.print(" | NEW\tnull");
+            //System.out.println("\n\nGEN " + gen + "\n");
+            float totalDist = 0;
+            for (int x = 0; x < 50; x++){
+                //System.out.println("winner " + x + " is " + genePool[x].ToString());
+                totalDist+=Math.abs(genePool[x].output-5.5);
             }
-            System.out.print("\n");
-            */
-            //DEBUG
+            System.out.println("GEN " + gen + " had an average distance of " + (totalDist / 50));
+            System.out.println("\n\n");
+
 
         }
-        //System.out.println("\n\n");
-        return returnList;
+
     }
 
     //USE ANN TO GENERATE AN AVERAGE CALCULATOR
@@ -116,7 +93,7 @@ public class Main {
     //DO THIS 100 TIMES
     //TOP 10 ANNS GET TO STAY
 
-    //WINNER ANNS CREATE 10 BABIES
+    //WINNER ANNS CREATE 1 BABIES
 
     //GENES ARE REALLY JUST NUMBERS BETWEEN -10.0f, 10.0f
     //GENERATED RANDOMLY BY GETTING RANDOM NUMBER BETWEEN 0 AND 199
@@ -137,7 +114,7 @@ public class Main {
 
 }
 
-class ANN{
+class ANN implements Comparable<ANN>{
 
     public float gene1,gene2;
     float output;
@@ -167,8 +144,22 @@ class ANN{
     }
 
     public String ToString(){
-        String s = "G1: " + gene1 + "  \t G2: " + gene2 + "\t OUT: " + output;
+        String s = "G1: " + gene1 + "  \t G2: " + gene2 + "\t OUT: " + output + "\t DIST: " + Math.abs(output - 5.5f);
         return s;
+    }
+
+    //if output - 5.5 < theiroutput - 5.5
+    //then  1
+    //else
+    //then -1
+
+    public int compareTo(ANN other){
+        if (Math.abs(this.output - 5.5f) < Math.abs(other.output - 5.5f)){
+            return 1;
+        }
+        else{
+            return -1;
+        }
     }
 
 }
